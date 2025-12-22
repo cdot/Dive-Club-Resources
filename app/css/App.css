@@ -13,9 +13,18 @@
   background-color: red;
 }
 
+.centred {
+  text-align: center;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 14pt;
+}
+
+@media screen and (max-width: 800px) {
+  body {
+    font-size: smaller;
+  }
 }
 
 /* Allow space for button and "fiters changed" select */
@@ -50,11 +59,11 @@ body {
   overflow: auto;
 }
 
-#history table {
+#history .table {
   padding: 0;
 }
 
-#history thead th {
+#history .table-head-cell {
   position: sticky;
   top: 0;
   background: #f0d903;
@@ -108,7 +117,7 @@ body {
 
 /* Digital runtime display */
 .digital {
-  font-size: 24pt !important;
+  font-size: larger !important;
   font-family: "Courier New", Courier, monospace !important
 }
 
@@ -125,7 +134,7 @@ body {
 }
 
 #fixed {
-  font-size: 18pt;
+  font-size: larger;
 }
 
 .flex-row {
@@ -200,15 +209,14 @@ input.integer3 {
 /* The table within an inventory sheet */
 .inventory_table {
   margin: 0;
-  border-collapse: collapse;
 }
 
-.inventory_table th {
+.inventory_table .header-cell {
   background-color: #AED9DA;
   border: 1px dotted black;
 }
 
-.inventory_table td {
+.inventory_table table-cell {
   border: 1px dotted black;
 }
 
@@ -234,37 +242,12 @@ label.error {
 }
 
 #loan_table {
-  border: 1px dotted grey;
   margin: 0;
-  border-collapse: collapse;
 }
 
-#loan_table td:last-child, #loan_table th:last-child {
-  text-align: center;
-}
-
-#loan_table td:nth-child(2),
-#loan_table td:nth-child(6) {
-  text-align: center;
-}
-
-#loan_table th.isnumber .tablesorter-header-inner {
-  padding: 0;
-}
-
-#loan_table th:nth-child(2),
-#loan_table th:nth-child(6) {
-  text-align: center;
-}
-
-#loan_table td,
-#loan_table th {
-  border: 1px dotted grey;
-}
-
-#loan_table > tfoot th {
-  color: #135589;
-  text-align: center;
+#loan_table .table-foot-group .table-cell {
+  color: white;
+  background-color: #135589;
 }
 
 /* A single cell in the loan table */
@@ -289,7 +272,7 @@ label.error {
 }
 
 #nitrox {
-  font-size: 18pt;
+  font-size: larger;
 }
 
 .bank_cylinder {
@@ -301,7 +284,7 @@ label.error {
 }
 
 #portable {
-  font-size: 20pt;
+  font-size: larger;
 }
 
 .report {
@@ -314,10 +297,21 @@ label.error {
   overflow: scroll;
 }
 
-/* Settings icon */
+/* Settings icons, top right */
 #settings_block {
   float: right;
   display: inline-block;
+}
+
+/* Settings dialog */
+h1.settings_group {
+  margin-bottom: 0pt;
+  background-color: #3AAAA7;
+  color:white;
+}
+
+.settings_button {
+  font-size: smaller;
 }
 
 .slider {
@@ -354,34 +348,59 @@ label.error {
 }
 
 /* A right-aligned table in a data capture form */
-th.input_label {
+div.input_label {
   text-align: right;
+  padding: 0.1em;
 }
 
 /* And alternate-coloured table */
-table.zebra > tbody > tr:nth-child(odd) {
+.zebra > .table-row:nth-child(odd) {
   background-color: #3DDAD7;
 }
 
-table.zebra > tbody > tr:nth-child(even) {
+.zebra > .table-row:nth-child(even) {
   background-color: #AED9DA;
 }
 
-table {
-  table-layout: auto;
-  border-collapse: collapse;
-  width: 100%;
+.table {
+  display: table;
 }
 
-table td,th {
-  white-space: nowrap;
-  padding: 0.5em;
-  text-align: left;
+.table-row {
+  display: table-row;
 }
 
-/* Tabs restyling for optimum space on Lenovo TAB 3 8 landscape mode */
+.table-cell {
+  display: table-cell;
+  border: 1px solid silver;
+}
+
+.table-head-cell {
+  display: table-cell;
+  font-weight: bold;
+  text-wrap: nowrap;
+  border: 1px solid silver;
+}
+
+.table-head-cell.padded {
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+}
+
+.table-head-group {
+  display: table-header-group;
+}
+
+.table-row-group {
+  display: table-row-group;
+}
+
+.table-foot-group {
+  display: table-footer-group;
+}
+
 .ui-tabs-nav {
-  font-size: 17pt;
+  font-size: larger;
   padding: 0;
 }
 

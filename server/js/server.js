@@ -41,8 +41,8 @@ const DESCRIPTION = [
   "", "\tThe server supports the following routes:",
   "\tGET /<file> - GET static file from distribution",
   "\tGET /<sensor> - ajax request to read a sensor",
-  "\tGET /data/<file> - GET file text from data_directory",
-  "\tPOST /data/<file> - POST text data to file in data_directory"
+  "\tGET /data/<file> - GET file text from data_dir",
+  "\tPOST /data/<file> - POST text data to file in data_dir"
 ].join("\n");
 
 const go_parser = new Getopt.BasicParser(
@@ -91,9 +91,7 @@ Fs.readFile(options.serverConfigFile)
   return Promise.reject(e.message);
 })
 .then(config => {
-  // Apply configuratiuon defaults
-  if (typeof config.data_dir === "undefined")
-    config.data_dir = Path.join(DISTRIBUTION, "data");
+  // Apply configuration defaults
   if (typeof config.port === "undefined")
     config.port = 8000;
 
@@ -109,19 +107,20 @@ Fs.readFile(options.serverConfigFile)
 
   // Add routes
 
-  // get/post database files
-  server.get("/", Express.static(config.data_dir));
-  server.use(bodyParser.text({ type: '*/*' }));
-  server.post("/data/*path", (req, res) => {
-    const path = Path.join(config.data_dir, req.params.path[0]);
-    console.debug("POST to", path);
-    return Fs.writeFile(path, req.body)
-    .then(() => res.status(200).send(`${path} saved`))
-    .catch(e => {
-      console.debug("Save failed", e);
-      res.status(400).send(`${path} save failed`);
+  // get/post database files, if data_dir is defined.
+  if (config.data_dir) {
+    server.use(bodyParser.text({ type: '*/*' }));
+    server.post("/data/*path", (req, res) => {
+      const path = Path.join(config.data_dir, req.params.path[0]);
+      console.debug("POST to", path);
+      return Fs.writeFile(path, req.body)
+      .then(() => res.status(200).send(`${path} saved`))
+      .catch(e => {
+        console.debug("Save failed", e);
+        res.status(400).send(`${path} save failed`);
+      });
     });
-  });
+  }
 
   // Serve distribution files
   server.use(Express.static(DISTRIBUTION));

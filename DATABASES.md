@@ -11,8 +11,13 @@ The application database contains:
   compressor and loan records,
 * `config.json` which stores most of the configuration.
 
-The application only stores plain-text CSV files in the application database. It can use a simple server that supports GET and POST requests (GetPostStore), or a WebDAV server (WebDAVStore). It would be easy to extend the
-application to interface to a different store provider, should you want to.
+The application only stores plain-text CSV files in the application database.
+It can use a simple server that supports GET and POST requests (GetPostStore),
+a WebDAV server (WebDAVStore), or local storage in the browser for when you
+are off diving.
+
+It should be easy to extend the application to interface to a different store
+provider, should you want to.
 
 The application server is accessed through the *Database URL* which
 points to the root folder of the database. This setting is stored in the
@@ -22,7 +27,11 @@ for an alternative server.
 
 ### Using the sensor server for the application database
 
-When you start the sensor server, it automatically starts a web server that supports unauthenticated GET and POST requests to a file store. This can be used as the file database for the app. Or you can use any other server that supports unauthenticated GET and POST requests to files in a directory.
+When you start the included sensor server, it automatically starts a web
+server that supports unauthenticated GET and POST requests to a file store.
+This can be used as the file database for the app. Or you can use any other
+server that supports unauthenticated GET and POST requests to files in a
+directory.
 
 ### Using a WebDAV server as the application database
 

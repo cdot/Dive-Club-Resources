@@ -1,5 +1,6 @@
 /*@preserve Copyright (C) 2025 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
+/* global URL */
 
 import { AbstractStore } from "./AbstractStore.js";
 
@@ -9,26 +10,35 @@ import { AbstractStore } from "./AbstractStore.js";
  */
 class GetPostStore extends AbstractStore {
 
+  /**
+   * URL for data store
+   * @member {URL}
+   */
+  base = undefined;
+
+  /**
+   * Authenticated user
+   * @member {string}
+   */
+  user = undefined;
+
+  /**
+   * Authenticated pass
+   * @member {string}
+   */
+  pass = undefined;
+
   // @override
   setCredentials(user, pass) {
     this.user = user;
     this.pass = pass;
   }
 
-  _error(res) {
-    if (typeof res.body === "string" && res.body.length > 0) {
-      res.html = res.body
-      .replace(/\n/g, " ") // Firefox doesn't support dotAll
-      .replace(/^.*<body>/i, "")
-      .replace(/<\/body>.*$/i, "");
-    }
-    return res;
-  }
-
   // @override
-  connect(url) {
-    console.debug(`GetPostStore.connect(${url})`);
-    this.url = url;
+  connect(params) {
+    console.debug(`GetPostStore.connect(${params.url})`);
+    // Clean up path so we have a suitable base
+    this.base = new URL(`${params.url.origin}${params.url.pathname}/`);
     return Promise.resolve(this);
   }
 
@@ -40,14 +50,14 @@ class GetPostStore extends AbstractStore {
 
   // @override
   read(path) {
-    const url = `${this.url}/${path}`;
+    const url = new URL(this.base + path);
     console.debug(`GetPostStore.read ${url}`);
     return $.get(url, null, null, "text");
   }
 
   // @override
   write(path, data) {
-    const url = `${this.url}/${path}`;
+    const url = new URL(this.base + path);
     return $.post(url, data, null, "text");
   }
 }

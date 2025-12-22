@@ -49,7 +49,7 @@ class Nitrox extends Entries {
 	}
 
 	//@override
-	attachHandlers() {
+	attach_handlers() {
     const nitrox = this;
     const $tab = this.$tab;
 		this.$form = $tab.children("form");
@@ -95,10 +95,10 @@ class Nitrox extends Entries {
 		});
 
     $tab.find("button[name='add_record']")
-		.on("click", () => this._addO2Record())
+		.on("click", () => this.add_O2_record())
     .button("option", "disabled", true);
 
-    return super.attachHandlers();
+    return super.attach_handlers();
 	}
 
 	// dialog to fix bank levels
@@ -114,7 +114,7 @@ class Nitrox extends Entries {
 			$cyl.on("change", () => {
 				const newp = $cyl.val();
 				banks[id].bar = newp;
-				this.reloadUI();
+				this.promise_to_reload_UI();
 			});
     }
     $dlg.dialog({})
@@ -174,7 +174,7 @@ class Nitrox extends Entries {
     });
   }
 
-	expandActions(actions) {
+	expand_actions(actions) {
     /* eslint-disable no-unused-vars */
 		function morethan(x,y) {
 			return x >= y;
@@ -326,11 +326,15 @@ class Nitrox extends Entries {
         .button("option", "disabled", true);
       }
     }
-		$report.html(this.expandActions(actions));
+		$report.html(this.expand_actions(actions));
   }
 
-  _addO2Record() {
-		console.debug("Adding O2 record", this.reports);
+  /**
+   * Add the most recent O2 record to the log
+   * @private
+   */
+  add_O2_record() {
+		console.debug("Nitrox: adding O2 record", this.reports);
     for (const r of this.reports)
       this.push(r);
     this.reports = [];

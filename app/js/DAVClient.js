@@ -177,7 +177,7 @@ class DAVClient {
   /**
    * Generates a propFind request.
    *
-   * @param {string} url Url to do the propfind request on
+   * @param {URL} url Url to do the propfind request on
    * @param {Array} properties List of properties to retrieve.
    * @param {string} depth "0", "1" or "infinity"
    * @param {Object} [headers] headers

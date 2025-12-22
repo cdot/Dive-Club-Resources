@@ -1,5 +1,6 @@
-/*@preserve Copyright (C) 2018-2024 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2018-2025 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
+/* global URL */
 
 import { AbstractStore } from "./AbstractStore.js";
 import { DAVClient } from "./DAVClient.js";
@@ -9,13 +10,32 @@ import { DAVClient } from "./DAVClient.js";
  */
 class WebDAVStore extends AbstractStore {
 
+  /**
+   * Authenticated user
+   * @member {string}
+   */
+  user = undefined;
+
+  /**
+   * Authenticated pass
+   * @member {string}
+   */
+  pass = undefined;
+
+  /**
+   * DAV client
+   * @member {DAVClient}
+   */
+  DAV = undefined;
+
   // @override
   setCredentials(user, pass) {
     this.user = user;
     this.pass = pass;
   }
 
-  _error(res) {
+  // @private
+  handle_error(res) {
     if (typeof res.body === "string" && res.body.length > 0) {
       res.html = res.body
       .replace(/\n/g, " ") // Firefox doesn't support dotAll
@@ -26,27 +46,10 @@ class WebDAVStore extends AbstractStore {
   }
 
   // @override
-  connect(url) {
-    if (url && this.url.lastIndexOf('/') !== this.url.length - 1)
-      url += '/';
-
-    const getUrl = window.location;
-    const baseUrl = getUrl.protocol + "//" + getUrl.host + "/"
-        + getUrl.pathname.split('/')[1];
-    console.debug("WebDAVStore URL base", baseUrl);
-    if (typeof URL !== "undefined") {
-      try {
-        url = new URL(url, baseUrl);
-      } catch (e) {
-        console.debug("WebDAVStore.connect to " + url + " failed: " + e);
-        return Promise.reject(new Error(
-          "Invalid URL, cannot start WebDAVStore"));
-      }
-    }
-
-    console.debug(`WebDAVStore: connecting to ${url}`);
+  connect(params) {
+    console.debug(`WebDAVStore: connecting to ${params.url}`);
     const opts = {
-      baseUrl: url
+      baseUrl: params.url
     };
     if (this.user) {
       opts.userName = this.user;
@@ -78,15 +81,15 @@ class WebDAVStore extends AbstractStore {
     .then(res => {
       if (200 <= res.status && res.status < 300)
         return Promise.resolve(res.body);
-      return Promise.reject(self._error(res));
+      return Promise.reject(self.handle_error(res));
     });
   }
 
   /**
    * Return a Promise to make the folder given by a path array.
+   * @private
    */
-  _mkpath(path) {
-    "use strict";
+  mkpath(path) {
 
     if (path.length === 0)
       return Promise.resolve(); // at the root, always exists
@@ -104,11 +107,11 @@ class WebDAVStore extends AbstractStore {
         } else if (res.status === 404) {
           const p = path.slice();
           p.pop();
-          return self._mkpath(p).then(() => {
+          return self.mkpath(p).then(() => {
             return self.DAV.request('MKCOL', path.join('/'));
           });
         }
-        return Promise.reject(self._error(res));
+        return Promise.reject(self.handle__error(res));
       });
   }
 
@@ -125,15 +128,15 @@ class WebDAVStore extends AbstractStore {
     folder.pop();
 
     if (!this.DAV)
-      return Promise.reject(self._error(new Error("WebDAVStore not connected")));
+      return Promise.reject(self.handle_error(new Error("WebDAVStore not connected")));
 
-    return self._mkpath(folder)
+    return self.mkpath(folder)
     .then(() => {
       return self.DAV.request('PUT', path.join('/'), {}, data)
       .then(res => {
         if (200 <= res.status && res.status < 300)
           return Promise.resolve(res.body);
-        return Promise.reject(self._error(res));
+        return Promise.reject(self.handle_error(res));
       });
     });
   }

@@ -176,7 +176,7 @@ describe("Compressor", () => {
   it("ui", () => {
     //comp.debug=console.debug;
     return comp.loadUI()
-    .then(() => comp.attachHandlers())
+    .then(() => comp.attach_handlers())
     .then(() => {
       let prom = Promise.resolve();
       let i = 1;

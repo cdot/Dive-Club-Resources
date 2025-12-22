@@ -1,39 +1,49 @@
-/*@preserve Copyright (C) 2018-2024 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2018-2025 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser, jquery */
 
 import { Entries } from "./Entries.js";
 import "./jq/with-info.js";
 
 /**
- * Get a descriptor string for a loan from the first three columns
- * of an inventory sheet
- * @private
+ * The inventory is stored as a set of CSV files by the remote database.
+ * A master CSV index has rows of other CSV files by name and URL. Each of
+ * these group sheets has a header row and a set of columns that describe
+ * the piece of kit. One special column, "Count", is assumed to contain a
+ * count of the number of pieces of the described kit. If it's absent it's
+ * assumed to be 1.
+ *
+ * The inventory is loaded from CSV, but is then serialised
+ * to the local database using JSON to speed up loading/saving.
+ *
+ * Each group sheet is given a "Class" to make it easy to
+ * $.find.
  */
-function getLoanDescriptor(sheet, entry) {
-  return `${sheet.Class} ${entry[0]}: ${entry[1]} ${entry[2]}`;
-}
-
 class Inventory extends Entries {
 
   /**
-   * 
+   * A unique id is generated for each group sheet to make it easy to
+   * $.find()
    * @member {}
    */
   uid = 0;
 
   /**
-   * Array of sheets. The inventory is initially loaded from
-   * CSV (or rather, a number of CSV) but is then serialised
-   * to the cache using JSON to speed up loading/saving. This
-   * is basically an array of serialised CSVs. Each sheet in the
-   * array is given a "Class" to make it easy to find, and has
-   * heads and entries as loaded from that CSV.
+   * Array of sheets.
    * @member {object[]}
    */
   data = undefined;
 
+  /**
+   * Get a descriptor string for a loan from the first three columns
+   * of an inventory sheet
+   * @private
+   */
+  static get_loan_descriptor(sheet, entry) {
+    return `${sheet.Class} ${entry[0]}: ${entry[1]} ${entry[2]}`;
+  }
+
 	//@override
-	attachHandlers() {
+	attach_handlers() {
 		$("#inventory_pick_dialog").dialog({
 			title: "Select loan item",
 			modal: true,
@@ -43,12 +53,14 @@ class Inventory extends Entries {
 				this.select_picked($(evt.target));
 			}
 		});
-    return super.attachHandlers();
+    return super.attach_handlers();
   }
 
   /**
    * Highlight the inventory item identified by data-picked by
    * adding the inventory_chosen class to it
+   * @param {jquery} $dlg the inventory pick dialog
+   * @private
    */
   select_picked($dlg) {
     const picked = $dlg.data("picked");
@@ -73,7 +85,7 @@ class Inventory extends Entries {
     sheet = this.data[si];
     const ents = sheet.entries;
     const ei = ents.findIndex(e => {
-      return getLoanDescriptor(sheet, e) == picked;
+      return Inventory.get_loan_descriptor(sheet, e) == picked;
     });
 
     if (ei >= 0) {
@@ -101,13 +113,13 @@ class Inventory extends Entries {
     });
   }
 
-  
   /**
    * Populate an inventory tab. This will be either the top
    * level tab or the loan item dialog tab. The top level tab
    * will have the class main-inventory which will modify the
    * way it is populated.
    * @param $it the tabs div
+   * @private
    */
   populate_tab($it) {
     const inventory = this.data;
@@ -122,8 +134,8 @@ class Inventory extends Entries {
       function make_row(ei) {
         // Make a copy, as we may modify Count
         const entry = [].concat(sheet.entries[ei]);
-        const $tr = $("<tr></tr>");
-        const desc = getLoanDescriptor(sheet, entry);
+        const $tr = $("<div class='table-row'></div>");
+        const desc = Inventory.get_loan_descriptor(sheet, entry);
         $tr.data("loan_desc", desc);
         const on_loan = self.app.loans.number_on_loan(desc);
         let can_pick = true;
@@ -137,7 +149,7 @@ class Inventory extends Entries {
               can_pick = false;
             }
             entry[colIndex.Count] +=
-            " <span data-with-info='#infoOnLoan1'>(" + on_loan + ")</span>";
+            ` <span data-with-info='#infoNumberOnLoan'>(${on_loan})</span>`;
           }
         }
         if (can_pick)
@@ -150,17 +162,17 @@ class Inventory extends Entries {
           });
         for (let ci = 0; ci < nc; ci++) {
           if (showCol[ci])
-            $tr.append("<td>" + entry[ci] + "</td>");
+            $tr.append(`<div class="table-cell">${entry[ci]}</div>`);
         }
         return $tr;
       }
 
-      const $table = $("<table class='inventory_table zebra'></table>");
-      const $tr = $("<tr></tr>");
+      const $table = $("<div class='table inventory_table'></div>");
+      const $tr = $("<div class='table-row'></div>");
       for (let ci = 0; ci < nc; ci++) {
         colIndex[sheet.heads[ci]] = ci;
         if (!hide_cols[sheet.heads[ci]]) {
-          $tr.append("<th>" + sheet.heads[ci] + "</th>");
+          $tr.append(`<div class='table-head-cell padded'>${sheet.heads[ci]}</div>`);
           showCol[ci] = true;
         }
       }
@@ -201,20 +213,22 @@ class Inventory extends Entries {
       $div.append(fill_sheet(sheet));
     }
     $it.find("span[data-with-info]").with_info();
-    $it.find('.inventory_on_loan').with_info({
+    /*$it.find('.inventory_on_loan').with_info({
       position: "hidden",
-      text: '#infoOnLoan2'
-    });
+      text: '#infoAllOnLoan'
+    });*/
     $it.tabs();
   }
 
   /**
    * Update the inventory by reading an updated
-   * version from CSV files on the web.  The inventory index is
+   * version from CSV files found by URL.  The inventory index is
    * read from a known URL, and then the URLs listed therein are
    * read to get the individual sheets.
+   * @param {URL} sheets_url the index URL
+   * @param {function} report progress reporting function(css_class, string)
    */
-  update_from_web(sheets_url, report) {
+  update_from_remote(sheets_url, report) {
 
     const sheetp = new Entries();
 
@@ -247,8 +261,7 @@ class Inventory extends Entries {
           })
           .then(s => s.loadFromStore())
           .then(() => {
-            report("info", "Read " + mapping.sheet +
-                   " from the web");
+            report("info", `Updated ${mapping.sheet}`);
             return {
               Class: mapping.sheet,
               heads: sheet.getHeads(),

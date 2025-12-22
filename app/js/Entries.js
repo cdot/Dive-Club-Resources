@@ -148,17 +148,17 @@ class Entries {
 	 * elements in the tab. NOP if there are no handlers.
    * @return {Promise} promise resolving to this
 	 */
-	attachHandlers() {
+	attach_handlers() {
     return Promise.resolve(this);
 	}
 
 	/**
 	 * Promise to reload the UI with new data. NOP unless the UI
-	 * is loaded, as indicated by $tab. DO NOT OVERRIDE -
+	 * is loaded, as indicated by $tab. Normally not overridden -
    * implement reload_ui instead.
    * @return {Promise} promise that resolves to this
 	 */
-	reloadUI() {
+	promise_to_reload_UI() {
 		if (this.$tab) {
 			console.debug("Reloading", this.id);
 			return this.reload_ui();
@@ -249,13 +249,13 @@ class Entries {
    */
   find(col, val) {
     return new Promise((resolve, reject) => {
-      for (let i = 0; i < this.entries.length; i++) {
-        if (this.entries[i][col] == val) {
-          resolve(this.entries[i]);
+      for (const e of this.entries) {
+        if (e[col] == val) {
+          resolve(e);
           return;
         }
       }
-      reject(new Error(val + " not found in " + col));
+      reject(new Error(`${val} not found in ${col}`));
     });
   }
 
@@ -316,7 +316,7 @@ class Entries {
 		}
 
     let lp;
-    if (typeof this.url !== "undefined")
+    if (this.url)
       lp = $.ajax({
         url: this.url,
         data: {

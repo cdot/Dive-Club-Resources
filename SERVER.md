@@ -5,9 +5,21 @@ designed to be run on a Raspberry Pi.
 
 The server supports file access for serving HTML and other resources, and
 AJAX requests for access to DHT11, DS18B20, and PC817 sensors, all attached
-to GPIO.
+to GPIO. It also optionally supports unautheticated POST requests for saving
+CSV data files to a directory.
 
 The pinout for the sensors is shown in [RPi pinout.svg](RPi pinout.svg)
+
+# Configuration
+The server is configured from a file specified using the -c option on the
+command-line. An example is given [here](server/example.cfg). The configuration
+file is in JSON format and supports the following:
+* `data_dir` server path to a directory that CSV files can be POSTed to. Set undefined if you don't want this enabled.
+* `port` the port to listen on
+* `sensors` an array of sensor configurations. Each configuration specifies
+  * `name` the name of the sensor
+  * `class` the Javascript class that supports this sensor type
+  * other fields that are required to configure the sensor, described below.
 
 # Hardware Configuration
 
@@ -18,18 +30,22 @@ intake air drawn into the compressor.
 
 Accessing this sensor is handled by the `node-dht-sensor` npm package. We use GPIO 14 for this sensor.
 
-The sensor has a range between 20% and 90%. If the reading is outside that
-range, the reading is marked as "dubious" as the sensor requires recalibration.
+The sensor has a humidity range between 20% and 90%. If the reading is outside that range, the reading is marked as "dubious" as the sensor requires recalibration.
 
-Note that the DHT family humidity sensor is notoriously inaccurate, so it
-can easily be disabled when it falls out of calibration.
+Note that the DHT family humidity sensor is notoriously inaccurate, and the recalibration process is tedious, so it can easily be disabled when it falls out of calibration.
+
+### config.js
+The supporting class is `DHTxx`. The fields required for configuration are:
+* `type` the sensor type eg 11 for a DHT11
+* `gpio` the GPIO pin the sensor signal wire connected to
+* `field` the field the sensor is reading, either `temperature` or `humidity`
 
 ## DS18b20 sensor
 
 This sensor is used to measure the temperature of the 3rd stage head
 in the compressor. The standard one-wire support built in to the RPi
-was configured to read GPIO pin 18 by adding to `/boot/config.txt`,
-thus:
+can be configured to read a GPIO pin by adding to `/boot/config.txt`,
+thus (sensor attached to GPIO pin 18):
 ```
 # 1-wire settings
 dtoverlay=w1-gpio,gpiopin=18
@@ -38,10 +54,19 @@ After a reboot you can see what sensors are connected using
 ```
 ls /sys/bus/w1/devices/w1_bus_master1
 ```
-Expect to see devices such as `28-0316027f81ff`
+Expect to see devices such as `28-0316027f81ff`.
+
+### config.js
+The supporting class is `DS18x20`. Only one field is required for configuration:
+* `sensor_id`: the one-wire id for the sensor.
 
 ## PC817 sensor
 The PC817 is an opto-isolated power sensor that simply drives a GPIO pin high when power is active.
+
+### config.js
+The supporting class is `Timer`. The fields required for configuration are:
+* `gpio` the GPIO pin the sensor signal wire connected to
+* `poll` the polling frequency in ms
 
 # Server Configuration
 You will need to install node.js and npm.

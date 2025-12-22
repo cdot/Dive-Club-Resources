@@ -8,13 +8,15 @@ import "./jq/select-in-place.js";
 /**
  * Entries for Loan events. These can be edited in place.
  */
-// Defaults used to populate the new entry row
+const SELECT_BUTTON = "SeLeCt";
+
+// Defaults used to populate the new entry row, fields in this.capture
 const DEFAULTS = {
   date: new Date(),
-  item: "select",
+  item: SELECT_BUTTON,
   count: 1,
-  borrower: "select",
-  lender: "select",
+  borrower: SELECT_BUTTON,
+  lender: SELECT_BUTTON,
   donation: 0
 };
 
@@ -22,7 +24,13 @@ const DEFAULTS = {
  * Load records. Read from/saved to loans.csv in the cache.
  */
 class Loans extends Entries {
-  
+
+  /**
+   * Captured data in last row: date, item, count, borrower, lender, donation
+   * @member {object}
+   */
+  capture = undefined;
+
   init(params) {
     return super.init($.extend(params, {
       file: "loans.csv",
@@ -49,7 +57,7 @@ class Loans extends Entries {
   }
 
 	//@override
-	attachHandlers() {
+	attach_handlers() {
 		this.$loan_controls.hide();
 
 		this.$tab.find("#loan_save")
@@ -143,7 +151,7 @@ class Loans extends Entries {
 				}
 			});
     });
-    return super.attachHandlers();
+    return super.attach_handlers();
   }
 
   mark_loan_modified($td) {
@@ -154,17 +162,28 @@ class Loans extends Entries {
     }
   }
 
-  /**
-   * mod_* functions are used for table calls in the tbody and also for
-   * the cells in the tfoot that capture new loans
+  /*
+   * construct_*_cell functions are used for table cells in the body
+   * and also for the cells in the foot that capture new loans
    */
-  mod_number($td, field, isInteger) {
-    let entry = this.capture;
-    if (typeof $td === "number") {
-      entry = this.get($td);
-      $td = $("<td></td>");
-      $td.css("text-align", "center");
-    }
+
+  /**
+   * Construct an inventory table cell, for a number field
+   * @param {number|jquery} e if e is a number, then construct a new table
+   * cell and get fields from the databse. If it's a jQuery object, then get
+   * the fields from this.capture.
+   * @param {string} field field name e.g. "count"
+   * @param {boolean?} isInteger true to constrainn value
+   * @private
+   */
+  construct_number_cell(e, field, isInteger) {
+    let entry, $td;
+    if (typeof e === "number") {
+      entry = this.get(e);
+      $td = $("<div class='table-cell centred'></div>");
+    } else
+      $td = e, entry = this.capture;
+
     const type = this.keys[field];
     let text = entry[field];
 
@@ -199,16 +218,23 @@ class Loans extends Entries {
 
   /**
    * Construct a select field, for Borrower and Lender and Returned fields
+   * @param {number|jquery} el table cell, or index
+   * @param {string} field field name
+   * @param {string?} set set to look up in roles e.g. "operator"
    * @private
    */
-  mod_select($td, field, set) {
-    let entry = this.capture;
-    if (typeof $td === "number") {
-      entry = this.get($td);
-      $td = $("<td></td>");
-    }
+  construct_select_cell(e, field, set) {
+    let entry, $td;
+    if (typeof e === "number") {
+      entry = this.get(e);
+      $td = $("<div class='table-cell'></div>");
+    } else
+      $td = e, entry = this.capture;
     const text = entry[field];
-    $td.text(text);
+    if (text === SELECT_BUTTON)
+      $td.addClass("centred").append("<button>select</button}");
+    else
+      $td.text(text);
 
     $td
     .off("click")
@@ -242,15 +268,21 @@ class Loans extends Entries {
   }
 
   /**
-   * Construct a Date field
+   * Construct an inventory table cell, for a date field
+   * @param {number|jquery} e if e is a number, then construct a new table
+   * cell and get fields from the databse. If it's a jQuery object, then get
+   * the fields from this.capture.
+   * @param {string} field field name e.g. "date"
    * @private
    */
-  mod_date($td, field) {
-    let entry = this.capture;
-    if (typeof $td === "number") {
-      entry = this.get($td);
-      $td = $("<td></td>");
-    }
+  construct_date_cell(e, field) {
+    let $td, entry;
+    if (typeof e === "number") {
+      entry = this.get(e);
+      $td = $("<div class='table-cell centred'></div>");
+    } else
+      entry = this.capture, $td = e;
+
     const date = entry[field];
     if (typeof date !== "undefined")
       $td.text(Entries.formatDate(date));
@@ -279,17 +311,27 @@ class Loans extends Entries {
   }
 
   /**
-   * Construct an inventory item field, for Item field
+   * Construct an inventory item field, for a rented item
+   * @param {number|jquery} e if e is a number, then construct a new table
+   * cell and get fields from the databse. If it's a jQuery object, then get
+   * the fields from this.capture.
    * @private
    */
-  mod_item($td, field) {
-    let entry = this.capture;
-    if (typeof $td === "number") {
-      entry = this.get($td);
-      $td = $("<td></td>");
-    }
+  construct_item_cell(e) {
+    let entry, $td;
+    if (typeof e === "number") {
+      entry = this.get(e);
+      $td = $(`<div class='table-cell'></div>`);
+    } else
+      entry = this.capture, $td = e;
+
+    const text = entry.item;
+    if (text === SELECT_BUTTON)
+      $td.addClass("centred").append("<button>select</button}");
+    else
+      $td.text(text);
+
     $td
-    .text(entry[field])
     .off("click")
     .on("click", () => {
       $td.removeClass("error");
@@ -310,7 +352,7 @@ class Loans extends Entries {
   // The tbody is where current loans are recorded
   load_tbody () {
     const order = this.$loan_table.data("order").split(",");
-    const $tbody = this.$loan_table.find("tbody");
+    const $tbody = this.$loan_table.find(".table-row-group");
     $tbody.empty();
 
     const show_all = this.$tab.find("#loan_show_all").is(':checked');
@@ -320,7 +362,7 @@ class Loans extends Entries {
                       row.returned === "");
       if (!active && !show_all)
         return;
-      const $row = $("<tr></tr>");
+      const $row = $("<div class='table-row'></div>");
       let isLate = false;
       if (active) {
         const due = row.date.valueOf() +
@@ -333,30 +375,30 @@ class Loans extends Entries {
       for (let c = 0; c < order.length; c++) {
         switch (order[c]) {
         case 'date':
-          $row.append(this.mod_date(r, "date"));
+          $row.append(this.construct_date_cell(r, "date"));
           break;
         case 'count':
-          $row.append(this.mod_number(r, "count", true));
+          $row.append(this.construct_number_cell(r, "count", true));
           break;
         case 'item':
-          $row.append(this.mod_item(r, "item"));
+          $row.append(this.construct_item_cell(r));
           break;
         case 'borrower':
-          $row.append(this.mod_select(r, "borrower", "member"));
+          $row.append(this.construct_select_cell(r, "borrower", "member"));
           break;
         case 'lender':
-          $row.append(this.mod_select(r, "lender", "operator"));
+          $row.append(this.construct_select_cell(r, "lender", "operator"));
           break;
         case 'donation':
-          $row.append(this.mod_number(r, "donation", false));
+          $row.append(this.construct_number_cell(r, "donation"));
           break;
         case 'returned':
-          $row.append(this.mod_select(r, "returned", "operator"));
+          $row.append(this.construct_select_cell(r, "returned", "operator"));
           break;
         }
       }
       if (isLate)
-        $row.find("td").addClass("loan_late");
+        $row.addClass("loan_late");
       $tbody.append($row);
     });
     this.$tab.find("#loan_some_late").toggle(someLate);
@@ -366,31 +408,21 @@ class Loans extends Entries {
   load_tfoot() {
     const order = this.$loan_table.data("order").split(",");
 
-    const $tfoot = this.$loan_table.find("tfoot");
+    const $tfoot = this.$loan_table.find(".table-foot-group");
     $tfoot.find(".loan_modified")
     .removeClass("modified");
 
-    let $col = $tfoot.find("th").first();
+    let $col = $tfoot.find(".table-cell").first();
     for (let i = 0; i < order.length; i++) {
       switch (order[i]) {
-      case 'date':
-        this.mod_date($col, "date");
-        break;
-      case 'count':
-        this.mod_number($col, "count", true);
-        break;
-      case 'item':
-        this.mod_item($col, "item");
-        break;
+      case 'date': this.construct_date_cell($col, "date"); break;
+      case 'count': this.construct_number_cell($col, "count", true); break;
+      case 'item': this.construct_item_cell($col); break;
       case 'borrower':
-        this.mod_select($col, "borrower", "member");
-        break;
+        this.construct_select_cell($col, "borrower", "member"); break;
       case 'lender':
-        this.mod_select($col, "lender", "operator");
-        break;
-      case 'donation':
-        this.mod_number($col, "donation", false);
-        break;
+        this.construct_select_cell($col, "lender", "operator"); break;
+      case 'donation': this.construct_number_cell($col, "donation"); break;
       }
       $col = $col.next();
     }

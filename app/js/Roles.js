@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2018-2024 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2018-2025 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env jquery */
 
 import "jquery";
@@ -24,8 +24,9 @@ class Roles extends Entries {
   /**
    * Reload the UI by re-reading the roles file from the cache
    * @return {Promise} promise that resolves to this
+   * @override
    */
-  reloadUI() {
+  promise_to_reload_UI() {
     console.debug("Reloading roles");
     return this.loadFromStore()
     .then(roles => {
@@ -52,7 +53,7 @@ class Roles extends Entries {
   /**
    * Update roles in the cache by reading from a CSV file on the web
    */
-  update_from_web(roles_url, report) {
+  update_from_remote(roles_url, report) {
     return $.ajax({
       url: roles_url,
       data: {

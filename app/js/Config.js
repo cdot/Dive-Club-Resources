@@ -132,14 +132,14 @@ class Config {
     $("button[name=change_database]")
     .on("click", () => app.change_database());
 
-    $("button[name=update_from_web]")
+    $("button[name=update_from_remote]")
     .on("click", () => {
       const $a = $.confirm({
-        title: "Updating from the web",
+        title: "Updating from the remote database",
         content: ""
       });
       config.save()
-      .then(() => app.update_from_web((clss, m) => {
+      .then(() => app.update_from_remote((clss, m) => {
         $a.setContentAppend(`<div class="${clss}">${m}</div>`);
       }));
     });

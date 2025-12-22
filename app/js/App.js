@@ -4,6 +4,7 @@
 /**
  * Shed management application. See README.md
  */
+/* global URL */
 
 import { Config } from "./Config.js";
 import { Entries } from "./Entries.js";
@@ -32,20 +33,18 @@ function tick() {
 class App {
 
   /**
+   * Set to the original console.debug if debugging is being captured
+   * @member {function}
+   */
+  superDebug = undefined;
+
+  /**
    * @param {object} params parsed from the URL in main.js
-   * @param {boolean?} params.console - redirect debugging output to a console.
-   * Useful when debugging on a browser that doesn't have a debugger
-   * (such as Android Webview)
+   * @param {boolean?} params.debug - 
    */
   constructor(params) {
 
-    /**
-     * The app console (a div) is initially open, but is closed
-     * after loading unless this is true.
-     * @member {boolean}
-     * @private
-     */
-    this.keepConsoleOpen = params.console;
+    this.enableDebug(params.debug);
 
     /**
      * Default configuration.
@@ -67,10 +66,10 @@ class App {
         o2: {
 					price: 0.01,
 					bank: { // random numbers
-						1: { size: 50.2, price: 0.015, bar: 96 },
-						2: { size: 47.5, price: 0.02, bar: 190 },
-						3: { size: 15, price: 0.025, bar: 210 },
-						4: { size: 11, price: 0.03, bar: 230 }
+						1: { size: 50.2, price: 0.02, bar: 96 },
+						2: { size: 47.5, price: 0.025, bar: 190 },
+						3: { size: 15, price: 0.03, bar: 210 },
+						4: { size: 11, price: 0.05, bar: 230 }
 					}
 				},
 
@@ -111,16 +110,44 @@ class App {
   }
 
   /**
+   * Override console.debug to always add messages to the app #console,
+   * as well as to the developer console. Needed when debugging on a browser
+   * that doesn't have a debugger (such as Android Webview). Note that the
+   * app is only run in debug mode when ?debug is added to the URL. To run it
+   * in debug mode all the time would bloat the body too much.
+   * @param {boolean} debug true to capture debugging in #console
+   * @private
+   */
+  enableDebug(debug) {
+    if (debug) {
+      if (!this.superDebug) {
+        // Switch on debugging capture
+        this.superDebug = console.debug;
+        console.debug = (...args) => {
+          this.superDebug.call(this, ...args);
+          const mess = args.join(" ");
+          const $div = $("<div></div>");
+          $div.text(mess);
+          $("#console").append($div);
+        };
+      }
+    } else if (this.superDebug) {
+      // Switch off debugging capture
+      console.debug = this.superDebug;
+      this.superDebug = undefined;
+    }
+}
+
+  /**
    * Update all UIs from the files in the store
    * @return {Promise} promise that resolves to this
-   * @override
    */
-  reloadUI() {
-    console.debug("reloadUI:");
+  reload_UI() {
+    console.debug("App.reload_UI:");
     return Promise.all(
       Object.values(this)
 			.filter(f => f instanceof Entries)
-			.map(f => f.reloadUI()))
+			.map(f => f.promise_to_reload_UI()))
     .then(() => {
       $("#main_tabs").tabs("option", "disabled", []);
       return this;
@@ -139,7 +166,7 @@ class App {
    * Update the local database from the remote read-only database.
    * @param {function} report progress reporting function(css_class, string)
    */
-  update_from_web(report) {
+  update_from_remote(report) {
     if (!this.config.get("db_index_url")) {
       $.alert({
         title: "Cannot update from web",
@@ -147,12 +174,12 @@ class App {
       });
       return Promise.reject(new Error("Cannot update form web"));
     }
-    console.debug("update_from_web:");
+    console.debug("update_from_remote:");
     return new Entries()
     .init({
       id: "RO index",
       store: this.config.store,
-      url: this.config.get("db_index_url"),
+      url: new URL(this.config.get("db_index_url")),
       keys: {
         sheet: "string",
         url: "string"
@@ -161,11 +188,11 @@ class App {
     .then(index => index.loadFromStore())
     .then(index => Promise.all([
       index.find("sheet", "roles")
-      .then(row => this.roles.update_from_web(row.url, report)),
+      .then(row => this.roles.update_from_remote(row.url, report)),
       index.find("sheet", "inventory")
       .then(row => (
         this.inventory
-        ? this.inventory.update_from_web(row.url, report)
+        ? this.inventory.update_from_remote(row.url, report)
         : null))
     ]))
     .then(() => {
@@ -253,7 +280,7 @@ class App {
     });
 
     $(document).on("reload_ui", () => {
-      this.reloadUI()
+      this.reload_UI()
       .then(() => {
         $("#loading").hide();
         $("#console").prependTo($("#console_dialog"));
@@ -290,14 +317,14 @@ class App {
   /**
    * If the database_connect fails, the database_url cookie may not
    * be set up or may be incorrect. Prompt for a better url.
-   * @param {string} url URL we failed to connect to
+   * @param {URL} url URL we failed to connect to
    * @param {boolean} use_webdav true to use webdav
    * @return {Promise} resolves to an AbstractStore
    * @private
    */
   database_reconnect(url, use_webdav) {
 		const app = this;
-    const sensor_server_url = String(window.location).replace(/\?.*/, "") + "data";
+    const sensor_server_url = new URL("data", window.location);
     return new Promise(resolve => {
       $.confirm({
         title: $("#connect_failed_dialog").prop("title"),
@@ -341,13 +368,13 @@ class App {
             case "use_webdav":
               ndav = true;
             case "use_other":
-              nurl = $dlg_body.find("[name=server_url]").val();
+              nurl = new URL($dlg_body.find("[name=server_url]").val());
               break;
             case "use_sensor_server":
               nurl = sensor_server_url;
               break;
             case "use_browser":
-              nurl = "browser";
+              nurl = new URL("browser:");
             }
             console.debug(`database_reconnect: using ${ndav?"WebDAV":""} server ${nurl}`);
             resolve(app.database_connect(nurl, ndav));
@@ -359,7 +386,7 @@ class App {
 
   /**
    * If the database server requires authentication, then authenticate.
-   * @param {string} url URL we are connecting to
+   * @param {URL} url URL we are connecting to
    * @return {Promise} promise that resolves when authentication is compete
    * @private
    */
@@ -416,61 +443,33 @@ class App {
   }
 
   /**
+   * Construct a store apprpriate for the url
+   * @param {URL} url the URL where the store is
+   * @param {boolean} use_webdav true to use webdav
+   * @return {Promise} promise that resolves to an AbstractStore
+   */
+  construct_store(url, use_webdav) {
+    const store_mod = url == "browser:" ? "LocalStorageStore" :
+          (use_webdav ? "WebDAVStore" : "GetPostStore");
+    return import(`./${store_mod}.js`)
+    .then(mods => new mods[store_mod]())
+    .catch(e => {
+      console.debug(`Could not construct a ${store_mod}`, e);
+      return Promise.reject(`Could not construct a ${store_mod}`);
+    });
+  }
+
+  /**
    * Try a first time connection to the database.
-   * @param {string} url the database URL
+   * @param {URL} url the database URL
    * @param {boolean} use_webdav true to use webdav
    * @return {Promise} resolves to an AbstractStore
    * @private
    */
   database_connect(url, use_webdav) {
     console.debug("database_connect: trying ", url);
-    const store_mod = url == "browser" ? "LocalStorageStore" :
-          (use_webdav ? "WebDAVStore" : "GetPostStore");
-    return import(`./${store_mod}.js`)
-    .then(mods => new mods[store_mod]())
-    .then(store => store.connect(url))
-    .then(store => {
-      this.config.store = store;
-
-      console.debug(`database_connect: connected to $store_mod} at ${url}, loading config.json`);
-      return this.config.load()
-      .then(() => {
-        if (url !== "browser")
-          Cookies.set("database_url", url, {
-            expires: 365
-          });
-        this.enable_tabs();
-
-				return store;
-      })
-      .catch(e => {
-        console.debug("database_connect: config.json load failed:", e);
-
-        if (url === "browser") {
-          // Loading config.json from localStorage will fail unless
-          // the configuration has been changed and saved. Accept it
-          // and use defaults.
-          return Promise.resolve(store);
-        }
-
-        return new Promise(resolve => {
-            $.confirm({
-              title: "Failed to load config.json from database",
-              content: "You can retry with a different URL or continue with defaults",
-              buttons: {
-                retry: {
-                  tect: "Retry",
-                  action: () => this.database_reconnect(url, use_webdav)
-                },
-                defaults: {
-                  text: "Use defaults",
-                  action: () => resolve(store)
-                }
-              }
-            });
-        });
-      });
-    })
+    return this.construct_store(url)
+    .then(store => store.connect({url: url}))
     .catch(e => {
       console.debug(`database_connect: ${url} connect failed`, e.toString());
       if (e.status === 401) {
@@ -486,7 +485,46 @@ class App {
       // to feeback.
       if (e.html)
         $("#loading").html(e.html);
-      return Promise.reject(new Error("Could not connect to " + url));
+      return Promise.reject(new Error(`Could not connect to ${url}`));
+    })
+    .then(store => {
+      this.config.store = store;
+      console.debug(`database_connect: connected to ${store.constructor.name} at ${url}, loading config.json`);
+      return this.config.load()
+      .catch(e => {
+        console.debug("database_connect: config.json load failed:", e);
+
+        if (url == "browser:") {
+          // Loading config.json from localStorage will fail unless
+          // the configuration has been changed and saved. Accept it
+          // and use defaults.
+          return Promise.resolve(this.config.store);
+        }
+
+        return new Promise(resolve => {
+          $.confirm({
+            title: "Failed to load config.json from database",
+            content: "You can retry with a different URL or continue with defaults",
+            buttons: {
+              retry: {
+                tect: "Retry",
+                action: () => this.database_reconnect(url, use_webdav)
+              },
+              defaults: {
+                text: "Use defaults",
+                action: () => resolve(this.config.store)
+              }
+            }
+          });
+        });
+      })
+      .then(() => {
+        if (url != "browser:")
+          Cookies.set("database_url", url, {
+            expires: 365
+          });
+        this.enable_tabs();
+      });
     });
   }
 
@@ -497,16 +535,16 @@ class App {
   connect_to_database() {
     let promise;
     const cookie = Cookies.get("database_url");
-    let url = "", use_webdav = false;
+    let url, use_webdav = false;
     if (cookie) {
       console.debug(`connect_to_database: Cookie ${cookie}`);
-      const bits = cookie.split("|");
-      url = bits[0], use_webdav = bits[1];
+      const bits = cookie.split("|", 2);
+      url = new URL(bits[0]), use_webdav = bits[1];
     } else
       console.debug(`connect_to_database: no Cookie`);
 
-    if (typeof url === "undefined" || url.length === 0)
-      promise = this.database_reconnect(url, use_webdav);
+    if (!url || url.length === 0)
+      promise = this.database_reconnect(undefined, use_webdav);
     else
       promise = this.database_connect(url, use_webdav);
 
@@ -536,7 +574,7 @@ class App {
 					});
         })
         .then(tab => tab.loadUI())
-        .then(tab => tab.attachHandlers())
+        .then(tab => tab.attach_handlers())
         .then(tab => this[id] = tab));
 		});
 		return Promise.all(requires)

@@ -24,27 +24,27 @@
     <div>
       Enter details of your run below:
     </div>
-    <table class="form_table zebra" id="compressor_table">
-      <tr class="operatorRow">
-	    <th class="input_label">
+    <div class="table form_table zebra" id="compressor_table">
+      <div class="table-row operatorRow">
+	    <div class="table-head-cell input_label">
           <span data-with-info="#infoOperator">
 		    Operator
           </span>
-	    </th>
-	    <td colspan="2" class="widest">
+	    </div>
+	    <div class="table-cell widest">
           <select name="operator" id="fixed_operator" class="operator" data-msg="Must be a trained operator" required>
 		    <option></option>
           </select>
-	    </td>
-      </tr>
+	    </div>
+      </div>
 
-      <tr class="temperatureRow">
-	    <th class="input_label">
+      <div class="table-row temperatureRow">
+	    <div class="table-head-cell input_label">
           <span data-with-info="#infoTemperature">
 		    Temperature
           </span>
-	    </th>
-	    <td class="widest">
+	    </div>
+	    <div class="table-cell widest">
           <input name="temperature" type="number" class="integer2" min="4" max="40" data-msg-min="Must be ≥4°C" data-msg-max="Must be ≤40°C" value="18" id="fixed_temp" data-compressor="fixed" data-sensor-config='{"name":"intake_temperature","max_age":300000,"sampled":".fixed_temp_sensed","dubious":".fixed_temp_dubious","unsampled":".fixed_temp_manual","enable":"#fixed_temp_enable"}'>&deg;C
           <span class="hidden fixed_temp_sensed detected">(detected)</span>
           <span class="hidden fixed_temp_manual warning">(Cannot read sensor - please enter value manually)</span>
@@ -56,17 +56,17 @@
               <label for="fixed_temp_enable" class="small-button">use sensor</label>
               <input id="fixed_temp_enable" type="checkbox" style="float:right" checked />
           </div> -->
-        </td>
-      </tr>
+        </div>
+      </div>
 
-      <tr class="humidityRow">
-	    <th class="input_label">
+      <div class="table-row humidityRow">
+	    <div class="table-head-cell input_label">
           <span data-with-info="#infoHumidity">
 		    Humidity
           </span>
-	    </th>
+	    </div>
 
-	    <td class="widest">
+	    <div class="table-cell widest">
           <input name="humidity" type="number" class="integer2" value="50" id="fixed_hum" data-compressor="fixed" data-sensor-config='{"name":"intake_humidity","max_age":300000,"sampled":".fixed_hum_sensed","unsampled":".fixed_hum_manual","dubious":".fixed_hum_dubious","enable":"#fixed_hum_enable"}'>%
           <span class="hidden fixed_hum_sensed detected">(detected)</span>
           <span class="hidden fixed_hum_manual warning">(Cannot read sensor - please enter value manually)</span>
@@ -78,18 +78,18 @@
                <label for="fixed_hum_enable" class="small-button">use sensor</label>
                <input id="fixed_hum_enable" type="checkbox" style="float:right" checked />
           </div> -->
-	    </td>
-      </tr>
+	    </div>
+      </div>
 
-      <tr>
-	    <th class="input_label">
+      <div class="table-row"> 
+	    <div class="table-head-cell input_label">
           <span data-with-info="#infoRuntime">
 		    Runtime
           </span>
           <br/>
           <span class="cr_delta detected"></span>
-	    </th>
-	    <td class="widest">
+	    </div>
+	    <div class="table-cell widest">
           <select class="digital" data-units="1000">
 		    <option>0</option>
 		    <option>1</option>
@@ -165,9 +165,9 @@
           </select>
           <input name="runtime" id="fixed_runtime" style="display:none" readonly="readonly" type="floating_point" data-msg="Must be greater than the last recorded runtime" min="0" required>
 		  hours
-	    </td>
-      </tr>
-    </table>
+	    </div>
+      </div>
+    </div>
   </form>
   <button name="add_record" id="fixed_add">Touch here to record this run</button>
   <div style="float:right"><span class="time_display"></span></div>
@@ -188,7 +188,8 @@
 
   <div id="history_dialog" class="fullscreen_dialog">
     <h2><span data-with-info="#infoHistory"><span class='fa fa-cog'></span> History</span></h2>
-    <div id="history">
+    <div id="history" class="table">
+      <div class="table-row"></div>
     </div>
     <div class="warning">Please be careful, changes can&apos;t be undone!</div>
     <button name="addrow">Duplicate last row</button>

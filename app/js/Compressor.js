@@ -1,5 +1,6 @@
 /*@preserve Copyright (C) 2018-2024 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
+/* global URL */
 
 import "jquery";
 import "./jq/edit-in-place.js";
@@ -23,7 +24,7 @@ const HEAD_TYPES = {
 const HISTORY_TRS = 50;
 
 // Base URL for sensors
-const SENSOR_URL = String(window.location).replace(/\?.*/, "");
+const SENSOR_URL = window.location;
 
 /**
  * @param {number} a time delta in hours
@@ -113,20 +114,20 @@ class Compressor extends Entries {
       }
 		});
 		console.debug("Adding compressor record", record);
-		return this._add(record)
+		return this.add_record(record)
     .then(() => {
 			$session_time.trigger("ticktock");
 			// Clear down the operator
 			this.$form.find("[name='operator']").val('');
 			// Make sure the form reflects where we are
-			this._setLastRuntime(record);
+			this.set_last_runtime(record);
 			// Validate the form for the new record
-			this._validateForm();
+			this.validate_form();
 		});
   }
   
 	//@override
-  attachHandlers() {
+  attach_handlers() {
 		this.$form = this.$tab.find(".validated_form");
 		const $runtime = this.$runtime = this.$tab.find("input[name='runtime']");
 
@@ -156,8 +157,8 @@ class Compressor extends Entries {
 				rta = this.get(this.length() - 1).runtime;
 			// Convert to hours
 			rta += session_time / 3600000;
-			this._setRuntimeAndDigits(rta);
-			this._validateForm();
+			this.set_runtime_and_digits(rta);
+			this.validate_form();
 		});
 
 		function tock() {
@@ -195,11 +196,11 @@ class Compressor extends Entries {
 
 		// Digits runtime control changed?
 		this.$form.find("select.digital")
-		.on("change", () => this._readDigits());
+		.on("change", () => this.read_digits());
 
 		// Handling form submission
 		this.$form.find(":input")
-		.on("change", () => this._validateForm());
+		.on("change", () => this.validate_form());
 		
 		this.$form.on("submit", e => {
 			e.preventDefault();
@@ -214,7 +215,7 @@ class Compressor extends Entries {
       // Has to be moved up to cover everything else
       $("body").append($dlg);
       $("#HISTORY_TRS").text(HISTORY_TRS);
-			$history.empty().append(this._history$table(HISTORY_TRS));
+			$history.empty().append(this.$history_table(HISTORY_TRS));
 
       $dlg
       .show()
@@ -230,10 +231,10 @@ class Compressor extends Entries {
       .on("click", () => {
         const copy = $.extend({}, this.lastEntry());
         this.entries.push(copy);
-        this.save().then(() => this.reloadUI());
+        this.save().then(() => this.promise_to_reload_UI());
         // Don't need to resort because the copy is the last entry
         const $table = $("#history > table");
-        $table.append(this._history$tr(this.lastEntry()));
+        $table.append(this.$history_tr(this.lastEntry()));
         $history[0].scrollTo(0, $history[0].scrollHeight);
       });
       
@@ -266,21 +267,21 @@ class Compressor extends Entries {
 			});
       record.filters_changed = true;
 			console.debug("Adding filter changed record", record);
-			this._add(record);
+			this.add_record(record);
       session_time = 0;
 		})
     .button(
       "option", "disabled", true);
 
-    return super.attachHandlers();
+    return super.attach_handlers();
   }
 
   /**
-   * @private
    * One of the form fields has changed, validate the form and
    * update the submit button
+   * @private
    */
-  _validateForm() {
+  validate_form() {
     if (typeof this.$form.valid === "function") {
       this.$tab
       .find("button[name='add_record']")
@@ -292,10 +293,10 @@ class Compressor extends Entries {
   }
 
   /**
-   * @private
    * Set the runtime but not the digits display.
+   * @private
    */
-  _setRuntime(v) {
+  set_runtime(v) {
     this.runtime = v;
     this.$runtime.val(hms(v));
 
@@ -310,11 +311,11 @@ class Compressor extends Entries {
   }
 
   /**
-   * @private
    * Set the runtime and also the digits display
+   * @private
    */
-  _setRuntimeAndDigits(v) {
-    this._setRuntime(v);
+  set_runtime_and_digits(v) {
+    this.set_runtime(v);
     this.$form.find("select.digital").each((i, el) => {
       const u = $(el).data("units");
       let dig = Math.floor(v / u);
@@ -327,26 +328,26 @@ class Compressor extends Entries {
    * @private
    * On manual change to the digits display, read it and set the runtime
    */
-  _readDigits() {
+  read_digits() {
     let v = 0;
     this.$form.find("select.digital").each((i, el) => {
       v += $(el).val() * $(el).data("units");
     });
-    this._setRuntime(v);
+    this.set_runtime(v);
   }
 
   /**
    * Set the UI for the last run, and the rule for the minimum runtime
    * @private
    */
-  _setLastRuntime(record) {
-		this._setRuntimeAndDigits(record.runtime);
+  set_last_runtime(record) {
+		this.set_runtime_and_digits(record.runtime);
 
     this.$tab.find(".cr_operator").text(record.operator);
     this.$tab.find(".cr_time").text(
       Entries.formatDateTime(record.date));
     this.$tab.find(".cr_flr").text(
-      Number(this._remainingFilterLife()).toFixed(2));
+      Number(this.remaining_filter_life()).toFixed(2));
 
     const lc = this.entries.find(e => e.filters_changed);
     this.$tab.find(".cr_flc").text(lc ? lc.date.toLocaleDateString() : "never");
@@ -364,8 +365,8 @@ class Compressor extends Entries {
    * Use an AJAX request to retrieve the latest sample
    * for a sensor
    */
-  _getSample(name) {
-    const url = `${SENSOR_URL}${name}`;
+  get_sample(name) {
+    const url = new URL(name, SENSOR_URL);
     return $.getJSON(url, {
       t: Date.now() // defeat cache
     });
@@ -378,16 +379,16 @@ class Compressor extends Entries {
                  "compressor records");
       const cur = this.lastEntry();
       if (cur)
-        this._setLastRuntime(cur);
+        this.set_last_runtime(cur);
 
       // Restart the sensor loop on the fixed compressor
       if (this.id === "fixed")
-        this._readSensors();
+        this.read_sensors();
       else
-        this._setRuntimeAndDigits(0);
+        this.set_runtime_and_digits(0);
 
       // Validate the form
-      this._validateForm();
+      this.validate_form();
 
       return this;
     })
@@ -413,7 +414,7 @@ class Compressor extends Entries {
    *     dubious: selector for when the sample value is questionable
    *     enabled: selector for a checkbox
    */
-  _updateSampledField($el, sample) {
+  update_sampled_field($el, sample) {
     const spec = $el.data("sensor-config");
     const id = `${this.id}:${spec.name}`;
 
@@ -460,7 +461,7 @@ class Compressor extends Entries {
    * @private
    * Update the sensor readings from the remote sensor URL
    */
-  _readSensors() {
+  read_sensors() {
 
     // Clear any existing timeout
     if (this.sensor_timeoutID)
@@ -469,14 +470,14 @@ class Compressor extends Entries {
 
     const promises = [
       // Promise to update runtime, This is always sampled.
-      this._getSample("power")
+      this.get_sample("power")
       .then(sample => {
         const rta = this.runtime + sample.sample / (60 * 60 * 1000);
-        this._setRuntimeAndDigits(rta);
-        this._validateForm();
+        this.set_runtime_and_digits(rta);
+        this.validate_form();
       })
       .catch(() => {
-        this._setRuntimeAndDigits(this.runtime, true);
+        this.set_runtime_and_digits(this.runtime, true);
       })
     ];
       
@@ -488,9 +489,9 @@ class Compressor extends Entries {
       const info = $el.data("sensor-config");
       if (this.config.get(`compressor:${this.id}:enable_${info.name}`)) {
         promises.push(
-          this._getSample(info.name)
-          .then(sample => this._updateSampledField($el, sample))
-          .catch(() => this._updateSampledField($el, null)));
+          this.get_sample(info.name)
+          .then(sample => this.update_sampled_field($el, sample))
+          .catch(() => this.update_sampled_field($el, null)));
       }
       //else
       //  console.debug(`compressor:${this.id}:enable_${info.name}`,
@@ -507,7 +508,7 @@ class Compressor extends Entries {
       const info = $el.data("sensor-config");
       if (this.config.get(`compressor:${this.id}:enable_${info.name}`)) {
         promises.push(
-          this._getSample(info.name)
+          this.get_sample(info.name)
           .then(sample => {
             sample = sample ? sample.sample : 0;
             const $report = $(".fixed_internal_temp");
@@ -538,7 +539,7 @@ class Compressor extends Entries {
       if (timeout > 0) {
         // Queue the next poll
         this.sensor_timeoutID =
-        setTimeout(() => this._readSensors(), timeout);
+        setTimeout(() => this.read_sensors(), timeout);
       }
     });
   }
@@ -547,7 +548,7 @@ class Compressor extends Entries {
 	 * Recalcalculate the remaining filter life from the history
 	 * @private
 	 */
-  _remainingFilterLife() {
+  remaining_filter_life() {
     const details = false;
     const cfg_pre = "compressor:" + this.id + ":filter:";
     const avelife = this.config.get(cfg_pre + "lifetime");
@@ -599,8 +600,9 @@ class Compressor extends Entries {
   /**
    * Add a new compressor record
    * @return {Promise} promise that resolves to this
+   * @private
    */
-  _add(r) {
+  add_record(r) {
     if (typeof r.runtime === "undefined")
       r.runtime = 0;
     if (typeof r.filters_changed === "undefined")
@@ -614,11 +616,11 @@ class Compressor extends Entries {
       console.debug("Runtime after this event was "
                  + r.runtime + " hours");
       console.debug("New prediction of remaining lifetime is "
-                 + this._remainingFilterLife() + " hours");
+                 + this.remaining_filter_life() + " hours");
       return this.save();
     })
     .then(() => this.play_record())
-    .then(() => this.reloadUI());
+    .then(() => this.promise_to_reload_UI());
   }
 
   /**
@@ -629,7 +631,7 @@ class Compressor extends Entries {
    * @param {string} val new value
 	 * @private
    */
-  _history$change(td, entry, name, val) {
+  $history_change(td, entry, name, val) {
     const $td = $(td);
     const $tr = $td.closest("tr");
 
@@ -663,13 +665,13 @@ class Compressor extends Entries {
         // when a sort takes a row out of range. Have to regenerate.
 			  $("#history")
         .empty()
-        .append(this._history$table(HISTORY_TRS));
+        .append(this.$history_table(HISTORY_TRS));
       }
     }
     this.save()
-    // reloadUI will invoke reload_ui which will call
-    // _setLastRuntime to set the form
-    .then(() => this.reloadUI());
+    // promise_to_reload_UI will invoke reload_ui which will call
+    // set_last_runtime to set the form
+    .then(() => this.promise_to_reload_UI());
   }
 
   /**
@@ -681,7 +683,7 @@ class Compressor extends Entries {
    * @return {jQuery} the $TD
 	 * @private
    */
-  _history$td(entry, name) {
+  $history_td(entry, name) {
     let val = entry[name];
 
     if (name === "date") {
@@ -689,14 +691,14 @@ class Compressor extends Entries {
     } else if (HEAD_TYPES[name] === "number")
       val = Number(val).toFixed(2);
 
-    const $td = $(`<td name="${name}">${val}</td>`);
+    const $td = $(`<div class='table-cell' name="${name}">${val}</div>`);
     $td.data("type", HEAD_TYPES[name]);
     
     const compressor = this;
     $td.on("click", () => {
       $td.edit_in_place({
         changed: function(v) {
-          return compressor._history$change(this, entry, name, v);
+          return compressor.$history_change(this, entry, name, v);
         }
       });
     });
@@ -711,18 +713,18 @@ class Compressor extends Entries {
    * @return {jQuery} the TR
 	 * @private
    */
-  _history$tr(entry) {
+  $history_tr(entry) {
     const heads = this.getHeads().filter(h => h !== "filters_changed");
-    const $tr = $("<tr></tr>");
+    const $tr = $("<div class='table-row'></div>");
     if (entry.filters_changed) {
       $tr.append(
-        this._history$td(entry, "date", entry.date.toISOString()));
+        this.$history_td(entry, "date", entry.date.toISOString()));
       $tr.append(
-        this._history$td(entry, "operator", entry.operator));
-      $tr.append(`<td colspan="${heads.length - 2}">FILTERS CHANGED</td>`);
+        this.$history_td(entry, "operator", entry.operator));
+      $tr.append(`<div class='table-cell'FILTERS CHANGED</div>`);
     } else {
       for (const head of heads)
-        $tr.append(this._history$td(entry, head));
+        $tr.append(this.$history_td(entry, head));
     }
     return $tr;
   }
@@ -731,8 +733,8 @@ class Compressor extends Entries {
    * Resort the history DOM table by runtime.
 	 * @private
    */
-  _history$resort() {
-    const $table = $("#history>table");
+  $history_resort() {
+    const $table = $("#history");
 
     function getRT(row) {
       const t = $("[name=runtime]", row).text();
@@ -740,11 +742,11 @@ class Compressor extends Entries {
     }
 
     const rows = $table
-          .find('tr:gt(0)')
+          .find('div.table-row:gt(0)')
           .toArray()
           .sort((a, b) => getRT(a) - getRT(b));
 
-    // The action of re-appending the TR to the table will remove it
+    // The action of re-appending the row to the table will remove it
     // from its old position
     for (const row of rows)
       $table.append(row);
@@ -756,21 +758,19 @@ class Compressor extends Entries {
    * @return {jQuery} the constructed table
 	 * @private
 	 */
-  _history$table(num_records) {
+  $history_table(num_records) {
     const ents = this.getEntries();   
     const heads = this.getHeads().filter(h => h !== "filters_changed");
-    const $table = $("<table><thead></thead><tbody></tbody></table>");
-    const $thead = $("thead", $table);
-    const $tbody = $("tbody", $table);
+    const $table = $("<div class='table'></div>");
     
     // Construct header row
-    const $tr = $("<tr></tr>");
-    heads.forEach(h => $tr.append(`<th>${h}</th>`));
-    $thead.append($tr);
+    const $tr = $("<div class='table-row'></div>");
+    heads.forEach(h => $tr.append(`<div class="table-cell">${h}</div>`));
+    $table.append($tr);
 
     const start = ents.length - num_records;
     for (let i = start < 0 ? 0 : start; i < ents.length; i++)
-      $tbody.append(this._history$tr(ents[i]));
+      $table.append(this.$history_tr(ents[i]));
     
     return $table;
   }

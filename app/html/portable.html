@@ -15,45 +15,45 @@
     <div>
       Enter details of your run below:
     </div>
-    <table class="form_table zebra" id="compressor_table">
-      <tr>
-        <th class="input_label">
+    <div class="table form_table zebra" id="compressor_table">
+      <div class="table-row">
+        <div class="table-head-cell input_label">
           <span data-with-info="#infoOperator">
             Operator
           </span>
-        </th>
-        <td colspan="2" class="widest">
+        </div>
+        <div class="table-head-cell widest">
           <input name="operator" class="operator" data-msg="Must be a trained operator" required>
-        </td>
-      </tr>
-      <tr>
-        <th class="input_label">
+        </div>
+      </div>
+      <div class="table-row">
+        <div class="table-head-cell input_label">
           <span data-with-info="#infoTemperature">
             Temperature
           </span>
-        </th>
-        <td class="widest">
+        </div>
+        <div class="table-cell widest">
           <input type="number" class="integer2" name="temperature" id="portable_temp" value="18" disabled>&deg;C
-          <div class="temperature slider" data-slider='{"min":4,"max":40,"friend":"#portable_temp"}'><div class="min">4&deg;C</div><div class="max">40&deg;C</div></div>
-        </td>
-      </tr>
-      <tr>
-        <th class="input_label">
+          <!--div class="temperature slider" data-slider='{"min":4,"max":40,"friend":"#portable_temp"}'><div class="min">4&deg;C</div><div class="max">40&deg;C</div></div-->
+        </div>
+      </div>
+      <div class="table-row">
+        <div class="table-head-cell input_label">
           <span data-with-info="#infoHumidity">
             Relative Humidity
           </span>
-        </th>
-        <td class="widest">
+        </div>
+        <div class="table-cell widest">
           <input data-msg="Must be between 0 and 80" name="humidity" type="number" class="integer2" min="0" max="80"> %
-        </td>
-      </tr>
-      <tr>
-        <th class="input_label">
+        </div>
+      </div>
+      <div class="table-row">
+        <div class="table-head-cell input_label">
           <span data-with-info="#infoSession">
             Runtime
           </span>
-        </th>
-        <td class="widest">
+        </div>
+        <div class="table-cell widest">
           <button class="session_play">
             <span class="fa fa-play"></span>
           </button>
@@ -63,9 +63,9 @@
           This run: <span class="session_time">00:00</span>,
           <span data-with-info="#infoManualHours">Total</span>
           <input type="text" name="runtime" data-msg="Must be greater than the last recorded runtime"> hours
-        </td>
-      </tr>
-    </table>
+        </div>
+      </div>
+    </div>
   </form>
   <div style="float:right">
     <button name="filters_changed">Filters changed</button>

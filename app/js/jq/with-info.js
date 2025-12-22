@@ -25,15 +25,15 @@ $.fn.with_info = function (params) {
 			text: params
 		};
 
-	function get_markdown(url) {
-		if ($("#" + url).length > 0) {
-			return Promise.resolve($("#" + url).innerHTML);
+	function get_markdown(uri) {
+		if ($(`#${uri}`).length > 0) {
+			return Promise.resolve($(`#${uri}`).innerHTML);
 		}
 
 		return import("markdown-it")
     .then(Markdown => {
 			return $.ajax({
-				url: url,
+				url: uri,
 				data: {
 					t: Date.now() // defeat cache
 				},
@@ -41,9 +41,7 @@ $.fn.with_info = function (params) {
 			})
 			.then(md => {
 				const html = new Markdown({ html: true }).render(md);
-        $("body").append("<div class='info hidden' id='"
-                         + url + "'>"
-                         + html + "</div>");
+        $("body").append(`<div class='info hidden' id='${uri}'>${html}</div>`);
 				return html;
 			});
 		});
