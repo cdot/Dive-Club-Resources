@@ -27,10 +27,13 @@ Optionally enabled services (edit `index.html` to enable):
 5. Loans - recording of equipment loans with complete editable history
 and cross-links to inventory
 
+The app supports the use of two online databases, accessed through AJAX calls.
+A static read-only database is used to retrieve information about resources, while an application database is used for logging.
+
 Help information is readily available throughout the application through the
 info buttons.
 
-See the [Browser application](APP.md) for more information.
+See the [APP.md](APP.md) for more information.
 
 ## Web Server
 

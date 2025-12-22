@@ -21,7 +21,7 @@ file is in JSON format and supports the following:
   * `class` the Javascript class that supports this sensor type
   * other fields that are required to configure the sensor, described below.
 
-# Hardware Configuration
+# Sensor Configuration
 
 ## DHT11
 
@@ -34,13 +34,13 @@ The sensor has a humidity range between 20% and 90%. If the reading is outside t
 
 Note that the DHT family humidity sensor is notoriously inaccurate, and the recalibration process is tedious, so it can easily be disabled when it falls out of calibration.
 
-### config.js
+### Configuration
 The supporting class is `DHTxx`. The fields required for configuration are:
 * `type` the sensor type eg 11 for a DHT11
 * `gpio` the GPIO pin the sensor signal wire connected to
 * `field` the field the sensor is reading, either `temperature` or `humidity`
 
-## DS18b20 sensor
+## DS18b20
 
 This sensor is used to measure the temperature of the 3rd stage head
 in the compressor. The standard one-wire support built in to the RPi
@@ -56,19 +56,19 @@ ls /sys/bus/w1/devices/w1_bus_master1
 ```
 Expect to see devices such as `28-0316027f81ff`.
 
-### config.js
+### Configuration
 The supporting class is `DS18x20`. Only one field is required for configuration:
 * `sensor_id`: the one-wire id for the sensor.
 
-## PC817 sensor
+## PC817
 The PC817 is an opto-isolated power sensor that simply drives a GPIO pin high when power is active.
 
-### config.js
+### Configuration
 The supporting class is `Timer`. The fields required for configuration are:
 * `gpio` the GPIO pin the sensor signal wire connected to
 * `poll` the polling frequency in ms
 
-# Server Configuration
+# Starting the Server
 You will need to install node.js and npm.
 
 Install the server software from github.
@@ -82,25 +82,6 @@ The server is then run as follows:
 ```
 $ node js/server.js -c <configuration file>
 ```
-The configuration file is a JSON format file that specifies the port for the server to use, and the the directory where collected sensor data will be stored. It also contains a list of sensors. Each sensor has at least:
-* class - the name of a class that implements an interface to the sensor
-* name - the name of the sensor. This will be used to create an AJAX
-entry point.
-
-DHTxx sensors also have:
-* type - the type of the DHT sensor, either 11 or 22
-* gpio - the GPIO pin for DHT11 data
-* field - the field (either temperature or humidity) of the sensor result
-  required
-
-DS18x20 sensors have:
-* sensor_id - the ID of the DS18B20 sensor on the 1-wire network
-
-Power sensors have:
-* gpio - the GPIO pin the sensor will pull up (BCM pin numbering)
-* timeout - the time for which the sensor must be quiescent to qualify as "off"
-
-an example configuration file is given in sensors/example.cfg
 
 The server has a number of command-line options that can be explored
 using the `--help` option.
@@ -181,4 +162,3 @@ command line. This can be done from the command line using:
 ```
 $ npm run simulation
 ```
-

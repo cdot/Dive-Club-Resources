@@ -69,13 +69,12 @@ Note that we only support Basic Auth.
 
 ### If there is no database
 
-*IN PROGRESS - DOESN'T WORK YET*
-
 If you don't configure a database then the app will fall back to logging to
 LocalStorage in the browser. This is mainly intended for use with a
-portable compressor, when you are away from the internet. If the LocalStorage
-contains logging records, they will automatically be synched to the main
-database the next time you connect.
+portable compressor, when you are away from the internet.
+
+TODO: If the LocalStorage contains logging records, they will automatically
+be synched to the main database the next time you connect.
 
 ## Remote read-only database
 
