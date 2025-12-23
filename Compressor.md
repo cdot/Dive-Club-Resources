@@ -1,19 +1,23 @@
 # Compressor
-
+![Compressor page](images/Compressor.png)
 Compressor support includes a logging application and an optional sensor
 package.
 
 ## Sensors
-
-At HSAC the sensors are interfaced through an ancient [Raspberry Pi](https://www.raspberrypi.org/) that reads [DS18B20](https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf) temperature, [DHT11](https://www.makerguides.com/wp-content/uploads/2019/02/DHT11-Datasheet.pdf) humidity and temperature, and power [PC817](https://octopart.com/datasheet/pc817b-sharp-9239011) sensors. The Raspberry Pi runs a service that polls the sensors, and makes the results available via AJAX requests. The URL to make these requests is called the **Sensors root URL** and is specified in the configuration dialog of the main package. Sensors are
-polled every few seconds. An audible alarm can be triggered if the internal
-temperature sensor in the compressor exceeds a given limit.
+At HSAC the sensors are interfaced through an ancient [Raspberry Pi](https://www.raspberrypi.org/)
+that reads [DS18B20](https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf) temperature, [DHT11](https://www.makerguides.com/wp-content/uploads/2019/02/DHT11-Datasheet.pdf) humidity and temperature, and power [PC817](https://octopart.com/datasheet/pc817b-sharp-9239011) sensors.
+The Raspberry Pi runs the server to poll the sensors, and makes the
+results available to the app via AJAX requests. The URL to make these
+requests is called the **Sensors root URL** and is specified in the
+configuration dialog of the app. Sensors are polled every few
+seconds. An audible alarm can be triggered if the internal temperature
+sensor in the compressor exceeds a given limit.
 
 Note that we have found the DHT11 humidity sensor to be particularly
 unreliable, so we use manually entered values most of the time. Some
 day we should really replace it with something better (e.g. an AHT20).
 
-The Pi is also used as the database server.
+The Pi is also used as the database server - see [DATABASES](DATABASES.md).
 
 ## Filter Life Prediction
 
@@ -108,4 +112,4 @@ or manually entered. Experience has shown that our compressor can tolerate a
 build up of up to 35ml of condensate before a purge becomes necessary. Purging
 every 7 minutes means we can fill at up to 90% humidity, below 20&deg;C.
 
-For more information on how the calculation is performed see the [source code](https://github.com/cdot/HSAC/blob/master/app/js/Compressor.js), method `_remainingFilterLife`.
+For more information on how the calculation is performed see the source code.

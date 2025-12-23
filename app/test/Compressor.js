@@ -3,8 +3,8 @@
 
 import { assert } from "chai";
 
-import { AbstractStore } from "../js/AbstractStore.js";
-import { Config } from "../js/Config.js";
+import { AbstractStore } from "../src/AbstractStore.js";
+import { Config } from "../src/Config.js";
 import { setup$, UNit } from "./Fixtures.js";
 
 // CSV column headings
@@ -54,7 +54,7 @@ describe("Compressor", () => {
       (typeof process === "undefined")
       ? import("jquery-validation")
       : Promise.resolve())
-    .then(() => import("../js/Compressor.js"))
+    .then(() => import("../src/Compressor.js"))
     .then(mods => Compressor = mods.Compressor);
   });
 

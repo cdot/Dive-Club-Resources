@@ -1,7 +1,7 @@
 /*eslint-env node, mocha */
 import { assert } from "chai";
 import { setup$, UNit } from "./Fixtures.js";
-import { Gas } from "../js/Gas.js";
+import { Gas } from "../src/Gas.js";
 
 /**
  * Real gases

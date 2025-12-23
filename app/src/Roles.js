@@ -45,7 +45,7 @@ class Roles extends Entries {
       return this;
     })
     .catch(e => {
-      console.error("Roles load failed: " + e);
+      console.debug("Roles.promise_to_reload_UI failed:", e);
       return this;
     });
   }

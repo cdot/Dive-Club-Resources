@@ -80,7 +80,7 @@ $ npm install
 ```
 The server is then run as follows:
 ```
-$ node js/server.js -c <configuration file>
+$ node src/server.js -c <configuration file>
 ```
 
 The server has a number of command-line options that can be explored
@@ -109,10 +109,10 @@ $ sudo nano /etc/init.d/sensors.sh
 #
 case "$1" in
   start)
-    node /home/pi/HSAC/server/js/server.js -c /home/pi/HSAC/sensors.cfg > /var/log/sensors.log 2>&1 &
+    node /home/pi/HSAC/server/src/server.js -c /home/pi/HSAC/sensors.cfg > /var/log/sensors.log 2>&1 &
     ;;
   stop)
-    pid=`ps -Af | grep "sensors/js/sensors.js" | grep -v grep | sed -e 's/^[^0-9]*//;s/\s.*//'
+    pid=`ps -Af | grep "sensors/src/server.js" | grep -v grep | sed -e 's/^[^0-9]*//;s/\s.*//'
 `
     if [ "$pid"!="" ]; then
 	( echo "Service stopping $pid"; kill -9 $pid ) 2>&1 \

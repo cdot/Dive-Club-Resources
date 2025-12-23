@@ -46,7 +46,7 @@ class Config {
       console.debug("Config.save: config.json saved");
     })
     .catch(e => {
-      console.error("Config save failed", e);
+      console.debug("Config.save failed:", e);
       $.alert({ title: "Config save failed",
                 content: e.message });
     });

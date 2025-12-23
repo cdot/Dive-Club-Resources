@@ -54,7 +54,7 @@ $.fn.with_info = function (params) {
 				  params.position || "after";
 
 		if (typeof s === "undefined" || s.charAt(0) === '#' && $(s).length === 0) {
-			console.error("INTERNAL ERROR: Missing with-info");
+			console.debug("INTERNAL ERROR: Missing with-info");
 			throw "Missing " + s;
 		}
 

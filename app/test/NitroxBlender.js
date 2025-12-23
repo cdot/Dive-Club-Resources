@@ -1,8 +1,8 @@
 /*eslint-env node, mocha */
 
 import { assert } from "chai";
-import { Gas } from "../js/Gas.js";
-import { NitroxBlender } from "../js/NitroxBlender.js";
+import { Gas } from "../src/Gas.js";
+import { NitroxBlender } from "../src/NitroxBlender.js";
 
 const tests = [
   {

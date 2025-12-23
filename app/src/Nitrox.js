@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2018-2024 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2018-2025 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
 import { Entries } from "./Entries.js";
@@ -13,13 +13,13 @@ class Nitrox extends Entries {
    * Configuration object
    * @member {Config}
    */
-  config;
+  config = undefined;
 
   /**
    * Shortcut to the form in the Entries.$tab
    * @member {jQuery}
    */
-  $form;
+  $form = undefined;
 
 	/**
    * £ per L of the cheapest O2, used in bleed calculations
@@ -169,7 +169,7 @@ class Nitrox extends Entries {
       return this;
     })
     .catch(e => {
-      console.error("Nitrox load failed: " + e, e);
+      console.debug("Nitrox.reload_ui failed:", e);
       return this;
     });
   }

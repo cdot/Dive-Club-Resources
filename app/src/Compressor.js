@@ -393,7 +393,7 @@ class Compressor extends Entries {
       return this;
     })
     .catch(e => {
-      console.error(`${this.id} Compressor load failed`, e);
+      console.debug(`Compressor.reload_ui ${this.id} failed:`, e);
       return this;
     });
   }

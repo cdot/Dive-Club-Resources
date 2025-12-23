@@ -1,7 +1,7 @@
 /*eslint-env node, mocha */
 import { assert } from "chai";
-import { Nitrox } from "../js/Nitrox.js";
-import { AbstractStore } from "../js/AbstractStore.js";
+import { Nitrox } from "../src/Nitrox.js";
+import { AbstractStore } from "../src/AbstractStore.js";
 
 import { setup$, UNit } from "./Fixtures.js";
 

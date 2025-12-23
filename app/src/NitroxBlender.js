@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2021 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2021-2025 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
 import { Gas } from "./Gas.js";

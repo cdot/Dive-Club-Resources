@@ -108,7 +108,7 @@ class Inventory extends Entries {
       return this;
     })
     .catch(e => {
-      console.error("Inventory load failed", e);
+      console.debug("Inventory.reload_ui failed:", e);
       return this;
     });
   }

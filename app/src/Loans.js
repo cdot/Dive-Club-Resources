@@ -453,7 +453,7 @@ class Loans extends Entries {
       return this;
     })
     .catch(e => {
-      console.error("Loans load failed: " + e);
+      console.debug("Loans.reload_ui failed:", e);
       return this;
     });
   }

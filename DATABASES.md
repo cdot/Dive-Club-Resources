@@ -1,20 +1,21 @@
 # Databases
 
 Two databases are used, a read-write application database, and a read-only
-text file database held on a remote service (such as Google Drive).
+database held on a remote service (such as Google Drive).
 
 ## Application database
 
 The application database contains:
-* a copy of the text files in the remote DB,
-* a number of data files maintained by the application, such as
+* a copy of a number of tables from the remote DB,
+* a number of tables maintained by the application, such as
   compressor and loan records,
 * `config.json` which stores most of the configuration.
 
-The application only stores plain-text CSV files in the application database.
+The database interface is coarse-grained; it loads and saves tables as CSV files. 
+The databases are small, and this allows easy use of text files on the database servers.
 It can use a simple server that supports GET and POST requests (GetPostStore),
 a WebDAV server (WebDAVStore), or local storage in the browser for when you
-are off diving.
+are away diving.
 
 It should be easy to extend the application to interface to a different store
 provider, should you want to.

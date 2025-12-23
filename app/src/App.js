@@ -119,6 +119,7 @@ class App {
    * @private
    */
   enableDebug(debug) {
+    $("#open_console").hide();
     if (debug) {
       if (!this.superDebug) {
         // Switch on debugging capture
@@ -130,6 +131,7 @@ class App {
           $div.text(mess);
           $("#console").append($div);
         };
+        $("#open_console").show();
       }
     } else if (this.superDebug) {
       // Switch off debugging capture
@@ -286,8 +288,10 @@ class App {
         $("#console").prependTo($("#console_dialog"));
 
         const $condlg = $("#console_dialog");
-        $("#open_console")
+
+        $("#open_console") // Bug button
         .on("click", () => $condlg.show());
+
         $condlg.find("[name=close]")
         .on("click", () => {
           $condlg.hide();
@@ -551,8 +555,7 @@ class App {
     return promise
     .then(() => console.debug(`connect_to_database: ${url} connected`))
     .catch(e => {
-      console.debug(`connect_to_database: failure`, e.toString());
-      console.error("connect_to_database: failure", e, url);
+      console.debug(`App.connect_to_database failed:`, e);
     });
   }
 
@@ -583,7 +586,7 @@ class App {
     .then(() => this.setup_database())
 		.then(() => $(document).trigger("reload_ui"))
     .catch(e => {
-      console.error(`Failed to setup store`, e);
+      console.debug(`App.begin failed:`, e);
     });
   }
 }

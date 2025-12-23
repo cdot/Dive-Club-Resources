@@ -6,7 +6,7 @@ requirejs.config({
 
 let gpio = process.argv[2];
 
-requirejs(["js/Timer"], function(Timer) {
+requirejs(["src/Timer"], function(Timer) {
    let pooh = new Timer({
        gpio: gpio,
        poll: 100,
