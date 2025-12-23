@@ -1,5 +1,6 @@
 # Inventory
 ![Inventory page](images/Inventory.png)
+
 The inventory contains a list of club equipment classified by their use. Each piece of equipment is allocated a
 unique id or, for equipment such as weights, a count is kept.
 
