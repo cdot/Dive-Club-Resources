@@ -1,5 +1,6 @@
 # Nitrox
 ![Nitrox blending page](images/Nitrox.png)
+
 The app can be used both to calculate nitrox blending solutions, and
 also to log the use of gas from a bank of O2 cylinders. Access to this
 functionality is restricted to qualified blenders.
